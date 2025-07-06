@@ -1,201 +1,114 @@
-:root {
-  --primary: #1db954;
-  --bg: #121212;
-  --surface: rgba(255, 255, 255, 0.05);
-  --text: #eeeeee;
-}
+let songIndex = 0;
+let isShuffle = false;
+const audioElement = new Audio('songs/1.mp3');
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
-}
+const masterPlay = document.getElementById('masterPlay');
+const myProgressBar = document.getElementById('myProgressBar');
+const gif = document.getElementById('gif');
+const masterSongName = document.getElementById('masterSongName');
+const currentTimeElement = document.getElementById('currentTime');
+const durationElement = document.getElementById('duration');
+const shuffleBtn = document.getElementById('shuffle');
+const volumeBtn = document.getElementById('volumeBtn');
+const songItems = Array.from(document.getElementsByClassName('songItem'));
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  overflow-x: hidden;
-  min-height: 100vh;
-}
+const songs = [
+  { songName: 'On & On', filePath: 'songs/1.mp3', coverPath: 'covers/1.jpg' },
+  { songName: 'Invincible', filePath: 'songs/2.mp3', coverPath: 'covers/2.jpg' },
+  { songName: 'Mortals', filePath: 'songs/3.mp3', coverPath: 'covers/3.jpg' },
+  { songName: 'Shine', filePath: 'songs/4.mp3', coverPath: 'covers/4.jpg' },
+  { songName: 'Why We Lose', filePath: 'songs/5.mp3', coverPath: 'covers/5.jpg' },
+  { songName: 'Sky High', filePath: 'songs/6.mp3', coverPath: 'covers/6.jpg' },
+  { songName: 'Symbolism', filePath: 'songs/7.mp3', coverPath: 'covers/7.jpg' },
+  { songName: 'Heroes Tonight', filePath: 'songs/8.mp3', coverPath: 'covers/8.jpg' },
+  { songName: 'Feel Good', filePath: 'songs/9.mp3', coverPath: 'covers/9.jpg' },
+  { songName: 'My Heart', filePath: 'songs/10.mp3', coverPath: 'covers/10.jpg' }
+];
 
-/* NAV */
-nav {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: linear-gradient(90deg, var(--bg), #181818 70%);
-  backdrop-filter: blur(8px);
-  padding: 1rem 2rem;
-}
-nav .brand {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  font-weight: 600;
-  font-size: 1.4rem;
-}
-nav .brand img {
-  width: 40px;
-  margin-right: 10px;
-}
+const playSong = () => {
+  // reset active classes
+  songItems.forEach(el => el.classList.remove('active'));
+  // set new src + UI
+  audioElement.src = songs[songIndex].filePath;
+  masterSongName.innerText = songs[songIndex].songName;
+  audioElement.currentTime = 0;
+  audioElement.play();
+  masterPlay.classList.replace('fa-play-circle', 'fa-pause-circle');
+  gif.style.opacity = 1;
+  // pulse the current cover
+  songItems[songIndex].classList.add('active');
+};
 
-/* MAIN LAYOUT */
-.container {
-  padding: 3rem 2rem;
-  max-width: 1200px;
-  margin: auto;
-}
+// next / prev logic
+const playNextSong = () => {
+  songIndex = isShuffle
+    ? Math.floor(Math.random() * songs.length)
+    : songIndex < songs.length - 1
+      ? songIndex + 1
+      : 0;
+  playSong();
+};
+const playPreviousSong = () => {
+  songIndex = songIndex > 0 ? songIndex - 1 : songs.length - 1;
+  playSong();
+};
 
-/* TITLE */
-.songList h1 {
-  text-align: center;
-  font-weight: 300;
-  margin-bottom: 2rem;
-  letter-spacing: 1px;
-}
+// initialize items
+songItems.forEach((element, i) => {
+  element.querySelector('img').src = songs[i].coverPath;
+  element.querySelector('.songName').innerText = songs[i].songName;
+  element.addEventListener('click', () => {
+    songIndex = i;
+    playSong();
+  });
+});
 
-/* GRID */
-.songItemContainer {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1.5rem;
-}
-
-/* SONG CARD */
-.songItem {
-  position: relative;
-  background: var(--surface);
-  border-radius: 16px;
-  padding: 1rem;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-.songItem:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6), 0 0 10px var(--primary);
-}
-
-/* PULSE ANIMATION ON ACTIVE */
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-.songItem.active img {
-  animation: pulse 2s infinite ease-in-out;
-}
-
-/* COVER IMAGE */
-.songItem img {
-  width: 100%;
-  border-radius: 12px;
-  transition: transform 0.3s;
-}
-
-/* PLAY ICON OVERLAY */
-.songItem::after {
-  content: '\f04b';
-  font-family: "Font Awesome 5 Free";
-  font-weight: 900;
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  font-size: 2rem;
-  color: var(--primary);
-  transition: transform 0.3s;
-  pointer-events: none;
-}
-.songItem:hover::after {
-  transform: translate(-50%, -50%) scale(1);
-}
-
-/* TEXT */
-.songName {
-  margin: 0.8rem 0 0.4rem;
-  font-weight: 500;
-  text-align: center;
-}
-
-/* TIMESTAMP */
-.songlistplay {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #aaa;
-}
-.songlistplay .timestamp {
-  font-size: 0.9rem;
-}
-
-/* BOTTOM CONTROLS */
-.bottom {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: rgba(18, 18, 18, 0.8);
-  backdrop-filter: blur(12px);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.8rem 2rem;
-  box-shadow: 0 -2px 15px rgba(0, 0, 0, 0.5);
-}
-
-/* PROGRESS BAR */
-.bottom input[type="range"] {
-  -webkit-appearance: none;
-  width: 100%;
-  max-width: 500px;
-  height: 6px;
-  background: #333;
-  border-radius: 3px;
-  outline: none;
-}
-.bottom input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px; height: 14px;
-  border-radius: 50%;
-  background: var(--primary);
-  box-shadow: 0 0 8px var(--primary);
-  cursor: pointer;
-}
-
-/* BUTTON ICONS */
-.icons {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-.icons i {
-  font-size: 1.8rem;
-  color: var(--text);
-  transition: color 0.2s, transform 0.2s;
-}
-.icons i:hover {
-  color: var(--primary);
-  transform: scale(1.2);
-}
-
-/* SONG INFO DISPLAY */
-.songInfo {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-.songInfo img {
-  width: 36px;
-  height: 36px;
-}
-.timeDisplay {
-  font-size: 0.9rem;
-}
-
-/* RESPONSIVE */
-@media (max-width: 600px) {
-  .songItemContainer { gap: 1rem; }
-  .bottom {
-    flex-direction: column;
-    padding: 1rem;
-    gap: 0.5rem;
+// event listeners
+masterPlay.addEventListener('click', () => {
+  if (audioElement.paused) {
+    playSong();
+  } else {
+    audioElement.pause();
+    masterPlay.classList.replace('fa-pause-circle', 'fa-play-circle');
+    gif.style.opacity = 0;
   }
+});
+
+audioElement.addEventListener('timeupdate', () => {
+  if (!isNaN(audioElement.duration)) {
+    myProgressBar.value = (audioElement.currentTime / audioElement.duration) * 100;
+    currentTimeElement.innerText = formatTime(audioElement.currentTime);
+    durationElement.innerText = formatTime(audioElement.duration);
+  }
+});
+
+myProgressBar.addEventListener('change', () => {
+  audioElement.currentTime = (myProgressBar.value * audioElement.duration) / 100;
+});
+
+audioElement.addEventListener('ended', playNextSong);
+
+shuffleBtn.addEventListener('click', () => {
+  isShuffle = !isShuffle;
+  shuffleBtn.classList.toggle('active');
+});
+
+volumeBtn.addEventListener('click', () => {
+  if (audioElement.volume === 0) {
+    audioElement.volume = 1;
+    volumeBtn.classList.replace('fa-volume-off', 'fa-volume-up');
+  } else {
+    audioElement.volume = 0;
+    volumeBtn.classList.replace('fa-volume-up', 'fa-volume-off');
+  }
+});
+
+document.getElementById('next').addEventListener('click', playNextSong);
+document.getElementById('previous').addEventListener('click', playPreviousSong);
+
+// helper
+function formatTime(t) {
+  const m = Math.floor(t / 60);
+  const s = Math.floor(t % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
 }
